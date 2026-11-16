@@ -66,7 +66,14 @@ function process() {
   state.pending = false;
   state.run += 1;
   const { width, height } = state.photo;
-  const rgba = state.photo.getContext("2d").getImageData(0, 0, width, height).data;
+  let rgba;
+  try {
+    rgba = state.photo.getContext("2d").getImageData(0, 0, width, height).data;
+  } catch (error) {
+    state.busy = false;
+    setStatus(`This browser would not let the page read the image (${error.message}).`, true);
+    return;
+  }
   worker.postMessage({ type: "run", id: state.run, width, height, rgba }, [rgba.buffer]);
   frame.classList.add("busy");
   setStatus("Finding the words");
@@ -118,6 +125,7 @@ function toCanvas({ width, height, rgba }) {
 async function loadImage(src) {
   const img = new Image();
   img.decoding = "async";
+  img.crossOrigin = "anonymous";
   img.src = src;
   try {
     await img.decode();
