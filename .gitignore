@@ -1,0 +1,12 @@
+data/
+runs/
+results/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+space/models/

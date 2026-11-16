@@ -1,0 +1,79 @@
+[paths]
+data = "data"
+runs = "runs"
+fonts = "data/fonts"
+
+[data]
+funsd_val_pages = 15
+cache_max_side = 1600
+word_cache_height = 48
+workers = 4
+
+[synth]
+pages = 1500
+workers = 4
+seed = 7
+
+[crnn]
+channels = [32, 64, 128, 128, 192, 192, 256]
+hidden = 192
+max_width = 512
+
+[detector]
+channels = [32, 64, 128, 192]
+blocks = [1, 2, 2, 1]
+fpn = 64
+k = 50.0
+shrink = 0.4
+thresh_min = 0.3
+thresh_max = 0.7
+
+[train_reader]
+batch_size = 64
+steps = 30000
+lr = 0.001
+weight_decay = 0.01
+warmup = 1000
+synthetic_only_steps = 4000
+real_fraction = 0.5
+workers = 2
+threads = 8
+eval_every = 2000
+save_every = 500
+log_every = 100
+seed = 0
+
+[train_detector]
+batch_size = 4
+crop = 640
+steps = 10000
+lr = 0.0015
+weight_decay = 0.0001
+warmup = 1000
+synthetic_only_steps = 4000
+real_fraction = 0.6
+workers = 2
+threads = 8
+eval_every = 2500
+save_every = 500
+log_every = 50
+min_scale = 0.5
+max_scale = 1.6
+seed = 0
+
+[detect]
+max_side = 1280
+threshold = 0.3
+box_threshold = 0.6
+unclip = 1.5
+min_size = 3.0
+
+[pipeline]
+beam_width = 0
+find_page = true
+dewarp = true
+min_dewarp_lines = 6
+min_dewarp_bend = 0.15
+
+[eval]
+workers = 2

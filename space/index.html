@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>document-ocr-engine</title>
+<meta name="description" content="Finds and reads every word on a photo of a receipt or a document, then flattens the page. Runs in the browser with ONNX Runtime Web.">
+<link rel="preload" href="fonts/next-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/next-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/mono-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <div>
+      <h1>document-ocr-engine</h1>
+      <p class="lede">Finds and reads every word on a photo of a receipt or a document, then flattens the page. I wrote and trained the detector and the reader from scratch. Both run in your browser, so your photo never leaves this tab.</p>
+    </div>
+    <a class="repo" href="https://github.com/adwitiyashukla/document-ocr-engine">Code on GitHub</a>
+  </header>
+
+  <section class="picker" aria-label="Choose an image">
+    <span class="picker-label" id="examples-label">Try an example</span>
+    <div class="examples" role="group" aria-labelledby="examples-label">
+      <button type="button" class="example" data-src="examples/cord-test-0016.jpg" aria-pressed="true"><img src="examples/cord-test-0016-thumb.jpg" width="59" height="88" alt="Receipt on a green table"></button>
+      <button type="button" class="example" data-src="examples/cord-test-0028.jpg" aria-pressed="false"><img src="examples/cord-test-0028-thumb.jpg" width="59" height="88" alt="Receipt photographed at an angle"></button>
+      <button type="button" class="example" data-src="examples/cord-test-0025.jpg" aria-pressed="false"><img src="examples/cord-test-0025-thumb.jpg" width="59" height="88" alt="Bakery receipt"></button>
+      <button type="button" class="example" data-src="examples/cord-test-0010.jpg" aria-pressed="false"><img src="examples/cord-test-0010-thumb.jpg" width="59" height="88" alt="Pretzel shop receipt"></button>
+    </div>
+    <label class="upload">
+      <input type="file" id="file" accept="image/*">
+      <span>Upload a photo</span>
+    </label>
+    <span class="picker-hint">or drop or paste an image</span>
+  </section>
+
+  <section class="workspace">
+    <div class="viewer">
+      <div class="viewer-bar">
+        <div class="tabs" role="tablist" aria-label="View">
+          <button type="button" role="tab" id="tab-photo" aria-selected="true" data-view="photo">Photo</button>
+          <button type="button" role="tab" id="tab-page" aria-selected="false" data-view="page">Flattened page</button>
+        </div>
+        <button type="button" class="quiet" id="save" hidden>Save page</button>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite">Starting</p>
+      <div class="stage">
+        <div class="frame" id="frame">
+          <canvas id="canvas" role="img" aria-label="No image yet"></canvas>
+          <div class="scan" aria-hidden="true"><div class="band"></div></div>
+          <div class="tip" id="tip" hidden></div>
+        </div>
+      </div>
+    </div>
+
+    <article class="sheet" aria-labelledby="text-title">
+      <div class="sheet-bar">
+        <h2 id="text-title">Text</h2>
+        <button type="button" class="quiet" id="copy" disabled>Copy text</button>
+      </div>
+      <div class="text" id="text"><p class="empty">The words will appear here in reading order.</p></div>
+      <p class="legend">Point at a word here or on the image to see both. A dotted underline means the reader was less than 80% sure.</p>
+    </article>
+  </section>
+
+  <section class="how" aria-labelledby="how-title">
+    <h2 id="how-title">How it works</h2>
+    <ol class="steps">
+      <li>
+        <h3>Find the words</h3>
+        <p>A DBNet detector marks which pixels belong to text. Each blob of text pixels becomes a rotated box around one word.</p>
+      </li>
+      <li>
+        <h3>Read each word</h3>
+        <p>Every box is cut out, straightened to 32 pixels high and read by a CRNN: a small CNN, then a two-layer BiLSTM, decoded with CTC.</p>
+      </li>
+      <li>
+        <h3>Put the words in order</h3>
+        <p>Words are chained into lines by their direction, height and spacing. Lines that share a row are joined, then sorted top to bottom.</p>
+      </li>
+      <li>
+        <h3>Flatten the page</h3>
+        <p>The paper is found from the colors around the detected words, and a homography maps its four corners onto a flat rectangle.</p>
+      </li>
+    </ol>
+    <p class="facts">Both models were trained from scratch on a CPU, on synthetic text plus the FUNSD and CORD training sets. The detector has 1.3M parameters and the reader 2.5M. Here they run as ONNX files on ONNX Runtime Web and give the same words as the Python version.</p>
+  </section>
+
+  <section class="scores" aria-labelledby="scores-title">
+    <h2 id="scores-title">Accuracy</h2>
+    <table>
+      <caption>End-to-end CLEval F1 on the FUNSD and CORD test sets. Higher is better.</caption>
+      <thead>
+        <tr><th scope="col">System</th><th scope="col">FUNSD</th><th scope="col">CORD</th></tr>
+      </thead>
+      <tbody>
+        <tr class="ours"><th scope="row">This engine</th><td>90.78</td><td>96.07</td></tr>
+        <tr><th scope="row">docTR DBNet + CRNN, published</th><td>90.30</td><td>96.75</td></tr>
+        <tr><th scope="row">Tesseract 5.3.4 on the same pages</th><td>75.06</td><td>54.08</td></tr>
+      </tbody>
+    </table>
+    <p class="more"><a href="https://github.com/adwitiyashukla/document-ocr-engine#results">Full results and method in the README</a></p>
+  </section>
+
+  <footer class="credits">
+    <p>Example receipts come from the CORD v2 test set (CC BY 4.0). Typefaces are Atkinson Hyperlegible Next and Mono (SIL Open Font License).</p>
+  </footer>
+</div>
+<div class="drop" id="drop" hidden><p>Drop the image to read it</p></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
